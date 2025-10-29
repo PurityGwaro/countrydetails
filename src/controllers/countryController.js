@@ -118,8 +118,13 @@ const getAllCountries = async (req, res) => {
 
         const countries = await Country.findAll(filters);
 
-        res.status(200).json(countries);
+        if (!countries || countries.length === 0) {
+            return res.status(200).json({
+                message: "No countries found in the database"
+            });
+        }
 
+        res.status(200).json(countries);
     } catch (error) {
         res.status(500).json({
             error: 'Internal server error',
