@@ -1,6 +1,7 @@
 const { fetchCountriesData, fetchExchangeRates } = require('../services/externalApi');
 const Country = require('../models/Country');
 const { generateSummaryImage } = require('../services/imageGenerator');
+const { validateCountryData } = require('../middleware/validation');
 
 /**
  * POST /countries/refresh
@@ -50,7 +51,8 @@ const refreshCountries = async (req, res) => {
                     flag_url: country.flag || null
                 };
 
-                await Country.upsert(countryData);
+                const validatedData = validateCountryData(countryData);
+                await Country.upsert(validatedData);
                 successCount++;
 
             } catch (error) {
@@ -74,10 +76,17 @@ const refreshCountries = async (req, res) => {
         });
 
     } catch (error) {
-        if (error.message.includes('RestCountries API') || error.message.includes('Exchange Rate API')) {
+        if (error.message.includes('RestCountries API')) {
             return res.status(503).json({
                 error: 'External data source unavailable',
-                details: error.message
+                details: "Could not fetch data from RestCountries API"
+            });
+        }
+
+        if (error.message.includes('Exchange Rate API')) {
+            return res.status(503).json({
+                error: 'External data source unavailable',
+                details: "Could not fetch data from Exchange Rate API"
             });
         }
 
@@ -194,7 +203,6 @@ const getSummaryImage = async (req, res) => {
         }
         res.sendFile(imagePath);
     } catch (error) {
-        console.error('Error serving image:', error.message);
         res.status(500).json({
             error: 'Internal server error',
             details: error.message

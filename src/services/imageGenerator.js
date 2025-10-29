@@ -82,13 +82,11 @@ const generateSummaryImage = async () => {
         await sharp(Buffer.from(svg))
             .png()
             .toFile(imagePath);
-        
-        console.log('✅ Summary image generated at cache/summary.png');
+
         return imagePath;
         
     } catch (error) {
-        console.error('Error generating summary image:', error);
-        throw error;
+        throw new Error("Failed to generate summary image: " + error.message);
     }
 };
 
