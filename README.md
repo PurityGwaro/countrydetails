@@ -9,9 +9,47 @@ A RESTful API built with **Node.js**, **Express**, and **MySQL** that fetches co
 - Calculate estimated GDP based on population and exchange rates
 - Full CRUD operations (Create, Read, Update, Delete)
 - Advanced filtering by region and currency
-- Sorting by GDP and population
+- Sorting by:
+  - GDP (ascending/descending)
+  - Population (ascending/descending)
 - MySQL database with connection pooling
+- Input validation
+- Error handling
 - RESTful API design
+
+## 🛠️ API Endpoints
+
+### `GET /countries`
+Get all countries with optional filtering and sorting
+
+**Query Parameters:**
+- `region` (optional): Filter by region (e.g., 'Africa', 'Europe')
+- `currency` (optional): Filter by currency code (e.g., 'USD', 'EUR')
+- `sort` (optional): Sort results by:
+  - `gdp_asc`: GDP in ascending order
+  - `gdp_desc`: GDP in descending order (default)
+  - `population_asc`: Population in ascending order
+  - `population_desc`: Population in descending order
+
+**Example:**
+```
+GET /countries?region=Africa&sort=population_desc
+```
+
+### `GET /countries/:name`
+Get a specific country by name
+
+### `POST /countries/refresh`
+Refresh country data from external APIs
+
+### `DELETE /countries/:name`
+Delete a country from the database
+
+### `GET /status`
+Get API status and statistics
+
+### `GET /countries/image`
+Get a summary image of country data
 
 ## 📋 Prerequisites
 

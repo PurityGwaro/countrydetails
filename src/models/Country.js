@@ -22,7 +22,7 @@ const upsert = async (countryData) => {
             flag_url = VALUES(flag_url),
             last_refreshed_at = CURRENT_TIMESTAMP;
     `;
-    
+
     const values = [
         countryData.name,
         countryData.capital || null,
@@ -33,7 +33,7 @@ const upsert = async (countryData) => {
         countryData.estimated_gdp || null,
         countryData.flag_url || null
     ];
-    
+
     try {
         const [result] = await pool.query(query, values);
         return result;
@@ -52,27 +52,28 @@ const upsert = async (countryData) => {
 const findAll = async (filters = {}) => {
     let query = 'SELECT * FROM countries WHERE 1=1';
     const values = [];
-    
+
     if (filters.region) {
         query += ' AND region = ?';
         values.push(filters.region);
     }
-    
+
     if (filters.currency) {
         query += ' AND currency_code = ?';
         values.push(filters.currency);
     }
-    
-    if (filters.sort === 'gdp_desc') {
-        query += ' ORDER BY estimated_gdp DESC';
-    } else if (filters.sort === 'gdp_asc') {
-        query += ' ORDER BY estimated_gdp ASC';
-    } else if (filters.sort === 'population_desc') {
-        query += ' ORDER BY population DESC';
+
+    if (filters.sort) {
+        const [field, order] = filters.sort.split('_');
+        if (field === 'gdp') {
+            query += ` ORDER BY estimated_gdp ${order.toUpperCase()}`;
+        } else if (field === 'population') {
+            query += ` ORDER BY population ${order.toUpperCase()}`;
+        }
     } else {
         query += ' ORDER BY name ASC';
     }
-    
+
     try {
         const [rows] = await pool.query(query, values);
         return rows;
@@ -90,7 +91,7 @@ const findAll = async (filters = {}) => {
  */
 const findByName = async (name) => {
     const query = 'SELECT * FROM countries WHERE name = ? LIMIT 1';
-    
+
     try {
         const [rows] = await pool.query(query, [name]);
         return rows[0] || null;
@@ -108,7 +109,7 @@ const findByName = async (name) => {
  */
 const deleteByName = async (name) => {
     const query = 'DELETE FROM countries WHERE name = ?';
-    
+
     try {
         const [result] = await pool.query(query, [name]);
         return result.affectedRows > 0;
@@ -127,7 +128,7 @@ const updateMetadata = async (totalCountries) => {
         SET total_countries = ?, last_refreshed_at = CURRENT_TIMESTAMP 
         WHERE id = 1;
     `;
-    
+
     try {
         await pool.query(query, [totalCountries]);
     } catch (error) {
@@ -141,7 +142,7 @@ const updateMetadata = async (totalCountries) => {
  */
 const getMetadata = async () => {
     const query = 'SELECT * FROM refresh_metadata WHERE id = 1';
-    
+
     try {
         const [rows] = await pool.query(query);
         return rows[0] || null;

@@ -32,7 +32,7 @@ const refreshCountries = async (req, res) => {
                         // Calculate estimated GDP
                         // Formula: population × random(1000-2000) ÷ exchange_rate
                         const randomMultiplier = Math.floor(Math.random() * 1001) + 1000;
-                        estimatedGdp = (country.population * randomMultiplier) / exchangeRate;
+                        estimatedGdp = Number((BigInt(country.population) * BigInt(randomMultiplier) / exchangeRate).toString());
                     }
                 }
 
@@ -180,21 +180,12 @@ const deleteCountryByName = async (req, res) => {
 const getStatus = async (req, res) => {
     try {
         const metadata = await Country.getMetadata();
-        if (!metadata) {
-            return res.status(200).json({
-                total_countries: 0,
-                last_refreshed_at: null
-            });
-        }
         res.status(200).json({
-            total_countries: metadata.total_countries,
-            last_refreshed_at: metadata.last_refreshed_at
+            total_countries: metadata ? metadata.total_countries : 0,
+            last_refreshed_at: metadata ? metadata.last_refreshed_at : null
         });
     } catch (error) {
-        res.status(500).json({
-            error: 'Internal server error',
-            details: error.message
-        });
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
 

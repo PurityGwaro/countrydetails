@@ -4,7 +4,12 @@ const validateCountryQuery = (req, res, next) => {
     const schema = Joi.object({
         region: Joi.string().trim().optional(),
         currency: Joi.string().trim().optional(),
-        sort: Joi.string().valid('gdp_desc', 'gdp_asc').optional()
+        sort: Joi.string()
+            .valid('gdp_desc', 'gdp_asc', 'population_desc', 'population_asc')
+            .optional()
+            .messages({
+                'any.only': 'Sort must be one of: gdp_desc, gdp_asc, population_desc, population_asc'
+            })
     }).unknown(false);
     
     const { error } = schema.validate(req.query, { abortEarly: false });
