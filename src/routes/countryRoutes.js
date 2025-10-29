@@ -1,8 +1,10 @@
 const express = require('express');
-const { refreshCountries } = require('../controllers/countryController');
+const { refreshCountries, getAllCountries, getCountryByName } = require('../controllers/countryController');
 
 const router = express.Router();
 
 router.post('/refresh', refreshCountries);
+router.get('/', getAllCountries);
+router.get('/:name', getCountryByName);
 
 module.exports = router;
