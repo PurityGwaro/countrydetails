@@ -31,6 +31,13 @@ const createCountriesTable = async () => {
         // Create metadata table for /status endpoint
         await connection.execute(metadataQuery);
         console.log("Metadata table created successfully");
+        // Insert initial metadata row - learnt the table is an UPDATE hence the initial row has to exist(needs more research!!)
+        const insertMetadata = `
+            INSERT IGNORE INTO refresh_metadata (id, total_countries, last_refreshed_at)
+            VALUES (1, 0, NULL);
+            `;
+        await connection.execute(insertMetadata);
+        console.log("Initial metadata row inserted");
     } catch (error) {
         console.error("Error creating tables:", error);
     } finally {
