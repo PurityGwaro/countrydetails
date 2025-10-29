@@ -1,6 +1,6 @@
 const pool = require("../config/database");
 
-const createCountriesTable = async () => {
+const createTables = async () => {
     const connection = await pool.getConnection();
     const tableQuery = `
         CREATE TABLE IF NOT EXISTS countries (
@@ -40,12 +40,6 @@ const createCountriesTable = async () => {
     }
 };
 
-createCountriesTable()
-    .then(() => {
-        console.log("Migration complete");
-        process.exit(0);
-    })
-    .catch((error) => {
-        console.error("Migration failed:", error);
-        process.exit(1);
-    });
+module.exports = {
+    createTables
+}

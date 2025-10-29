@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const countryRoutes = require("./src/routes/countryRoutes");
+const { createTables } = require("./src/database/migrate");
 
 const app = express();
 const port = process.env.PORT || 3006;
@@ -28,5 +29,12 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(port, () => {
+    createTables()
+        .then(() => {
+            console.log("Migration complete");
+        })
+        .catch((error) => {
+            console.error("Migration failed:", error);
+        });
     console.log(`Server running on port ${port}`);
 });
