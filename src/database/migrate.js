@@ -43,18 +43,6 @@ const createCountriesTable = async () => {
     } finally {
         connection.release();
     }
-
-    //    const insertQuery = `
-    //       INSERT INTO countries (name, capital, region, population, currency_code, exchange_rate, flag_url)
-    //       VALUES 
-    //         ('Kenya', 'Nairobi', 'Africa', 54000000, 'KES', 129.50, 'https://flagcdn.com/ke.svg'),
-    //         ('United States', 'Washington D.C.', 'Americas', 331000000, 'USD', 1.00, 'https://flagcdn.com/us.svg'),
-    //         ('Japan', 'Tokyo', 'Asia', 126000000, 'JPY', 149.50, 'https://flagcdn.com/jp.svg')
-    //       ON DUPLICATE KEY UPDATE name=name;
-    //     `;
-
-    //     await connection.execute(insertQuery);
-    //     console.log('Sample data inserted!');
 };
 
 createCountriesTable()
