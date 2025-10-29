@@ -1,5 +1,6 @@
 const { fetchCountriesData, fetchExchangeRates } = require('../services/externalApi');
 const Country = require('../models/Country');
+const { generateSummaryImage } = require('../services/imageGenerator');
 
 /**
  * POST /countries/refresh
@@ -7,13 +8,10 @@ const Country = require('../models/Country');
  */
 const refreshCountries = async (req, res) => {
     try {
-        console.log('Fetching countries and exchange rates...');
         const [countries, exchangeRates] = await Promise.all([
             fetchCountriesData(),
             fetchExchangeRates()
         ]);
-
-        console.log(`Fetched ${countries.length} countries and ${Object.keys(exchangeRates).length} exchange rates`);
 
         let successCount = 0;
         let errorCount = 0;
@@ -32,7 +30,7 @@ const refreshCountries = async (req, res) => {
 
                         // Calculate estimated GDP
                         // Formula: population × random(1000-2000) ÷ exchange_rate
-                        const randomMultiplier = Math.floor(Math.random() * 1001) + 1000; // 1000-2000
+                        const randomMultiplier = Math.floor(Math.random() * 1001) + 1000;
                         estimatedGdp = (country.population * randomMultiplier) / exchangeRate;
                     }
                 }
@@ -56,14 +54,17 @@ const refreshCountries = async (req, res) => {
                 successCount++;
 
             } catch (error) {
-                console.error(`Error processing country ${country.name}:`, error.message);
                 errorCount++;
             }
         }
 
         await Country.updateMetadata(successCount);
 
-        console.log(`✅ Refresh complete: ${successCount} countries saved, ${errorCount} errors`);
+        try {
+            await generateSummaryImage();
+        } catch (imageError) {
+            console.error('Failed to generate summary image:', imageError.message);
+        }
 
         res.status(200).json({
             message: 'Countries refreshed successfully',
@@ -73,8 +74,6 @@ const refreshCountries = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error refreshing countries:', error.message);
-
         if (error.message.includes('RestCountries API') || error.message.includes('Exchange Rate API')) {
             return res.status(503).json({
                 error: 'External data source unavailable',
@@ -113,7 +112,6 @@ const getAllCountries = async (req, res) => {
         res.status(200).json(countries);
 
     } catch (error) {
-        console.error('Error fetching countries:', error.message);
         res.status(500).json({
             error: 'Internal server error',
             details: error.message
@@ -135,7 +133,6 @@ const getCountryByName = async (req, res) => {
         res.status(200).json(country);
 
     } catch (error) {
-        console.error('Error fetching country:', error.message);
         res.status(500).json({
             error: 'Internal server error',
             details: error.message
@@ -159,7 +156,6 @@ const deleteCountryByName = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error deleting country:', error.message);
         res.status(500).json({
             error: 'Internal server error',
             details: error.message
@@ -170,20 +166,35 @@ const deleteCountryByName = async (req, res) => {
 const getStatus = async (req, res) => {
     try {
         const metadata = await Country.getMetadata();
-        console.log("metadata", metadata)
         if (!metadata) {
             return res.status(200).json({
                 total_countries: 0,
                 last_refreshed_at: null
             });
         }
-        console.log("metadata", metadata)
         res.status(200).json({
             total_countries: metadata.total_countries,
             last_refreshed_at: metadata.last_refreshed_at
         });
     } catch (error) {
-        console.error('Error fetching status:', error.message);
+        res.status(500).json({
+            error: 'Internal server error',
+            details: error.message
+        });
+    }
+};
+
+const getSummaryImage = async (req, res) => {
+    try {
+        const fs = require('fs');
+        const path = require('path');
+        const imagePath = path.join(__dirname, '../../cache/summary.png');
+        if (!fs.existsSync(imagePath)) {
+            return res.status(404).json({ error: "Summary image not found" });
+        }
+        res.sendFile(imagePath);
+    } catch (error) {
+        console.error('Error serving image:', error.message);
         res.status(500).json({
             error: 'Internal server error',
             details: error.message
@@ -196,5 +207,6 @@ module.exports = {
     getAllCountries,
     getCountryByName,
     deleteCountryByName,
-    getStatus
+    getStatus,
+    getSummaryImage
 };
